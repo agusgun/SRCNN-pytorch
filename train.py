@@ -9,10 +9,12 @@ import torch.backends.cudnn as cudnn
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 
-from models import SRCNN
+from models import SRCNN, SRCNNResBlock
 from datasets import TrainDataset, EvalDataset
 from utils import AverageMeter, calc_psnr
 
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -25,6 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--num-epochs', type=int, default=400)
     parser.add_argument('--num-workers', type=int, default=8)
     parser.add_argument('--seed', type=int, default=123)
+    parser.add_argument('--variant', choices={'default', 'resblock'}, default='default')
     args = parser.parse_args()
 
     args.outputs_dir = os.path.join(args.outputs_dir, 'x{}'.format(args.scale))
@@ -37,7 +40,11 @@ if __name__ == '__main__':
 
     torch.manual_seed(args.seed)
 
-    model = SRCNN().to(device)
+    model = None
+    if (args.variant == 'default'):
+        model = SRCNN().to(device)
+    else:
+        model = SRCNNResBlock().to(device)
     criterion = nn.MSELoss()
     optimizer = optim.Adam([
         {'params': model.conv1.parameters()},
