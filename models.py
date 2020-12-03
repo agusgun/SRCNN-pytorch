@@ -27,17 +27,20 @@ class ResidualBlock(nn.Module):
         out = self.relu(self.conv1(x))
         out = self.conv2(out)
         out = out + x
+        return out
 
 class SRCNNResBlock(nn.Module):
     def __init__(self, num_channels=1):
         super(SRCNNResBlock, self).__init__()
 
-        self.resblock1 = ResidualBlock(num_channels, 32)
+        self.conv1 = nn.Conv2d(num_channels, 32, kernel_size=9, padding=9 // 2)
+        self.resblock1 = ResidualBlock(32, 32)
         self.resblock2 = ResidualBlock(32, 32)
-        self.resblock3 = ResidualBlock(32, num_channels)
+        self.last_conv = nn.Conv2d(32, num_channels, kernel_size=5, padding=5 // 2)
 
     def forward(self, x):
+        x = self.conv1(x)
         out = self.resblock1(x)
-        out = self.resblock2(x)
-        out = self.resblock3(x)
+        out = self.resblock2(out)
         out = out + x
+        return out

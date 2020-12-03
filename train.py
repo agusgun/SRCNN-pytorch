@@ -45,12 +45,23 @@ if __name__ == '__main__':
         model = SRCNN().to(device)
     else:
         model = SRCNNResBlock().to(device)
+    print('Num Parameters', count_parameters(model))
+    print(model)
     criterion = nn.MSELoss()
-    optimizer = optim.Adam([
-        {'params': model.conv1.parameters()},
-        {'params': model.conv2.parameters()},
-        {'params': model.conv3.parameters(), 'lr': args.lr * 0.1}
-    ], lr=args.lr)
+
+    if (args.variant == 'default'):
+        optimizer = optim.Adam([
+            {'params': model.conv1.parameters()},
+            {'params': model.conv2.parameters()},
+            {'params': model.conv3.parameters(), 'lr': args.lr * 0.1}
+        ], lr=args.lr)
+    else:
+        optimizer = optim.Adam([
+            {'params': model.conv1.parameters()},
+            {'params': model.resblock1.parameters()},
+            {'params': model.resblock2.parameters()},
+            {'params': model.last_conv.parameters(), 'lr': args.lr * 0.1}
+        ], lr=args.lr)
 
     train_dataset = TrainDataset(args.train_file)
     train_dataloader = DataLoader(dataset=train_dataset,
