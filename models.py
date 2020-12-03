@@ -43,4 +43,5 @@ class SRCNNResBlock(nn.Module):
         out = self.resblock1(x)
         out = self.resblock2(out)
         out = out + x
+        out = self.last_conv(out)
         return out
