@@ -5,7 +5,7 @@ import torch.backends.cudnn as cudnn
 import numpy as np
 import PIL.Image as pil_image
 
-from models import SRCNN
+from models import SRCNN, SRCNNResBlock, SRCNNResBlockDeep
 from utils import convert_rgb_to_ycbcr, convert_ycbcr_to_rgb, calc_psnr
 
 
@@ -14,13 +14,18 @@ if __name__ == '__main__':
     parser.add_argument('--weights-file', type=str, required=True)
     parser.add_argument('--image-file', type=str, required=True)
     parser.add_argument('--scale', type=int, default=3)
+    parser.add_argument('--variant', choices={'default', 'resblock', 'deepresblock'}, default='default')
     args = parser.parse_args()
 
     cudnn.benchmark = True
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
-    model = SRCNN().to(device)
-
+    if args.variant == 'default':
+        model = SRCNN().to(device)
+    elif args.variant == 'resblock':
+        model = SRCNNResBlock().to(device)
+    else:
+        model = SRCNNResBlockDeep().to(device)
     state_dict = model.state_dict()
     for n, p in torch.load(args.weights_file, map_location=lambda storage, loc: storage).items():
         if n in state_dict.keys():
