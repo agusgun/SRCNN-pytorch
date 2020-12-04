@@ -45,3 +45,24 @@ class SRCNNResBlock(nn.Module):
         out = out + x
         out = self.last_conv(out)
         return out
+
+class SRCNNResBlockDeep(nn.Module):
+    def __init__(self, num_channels=1):
+        super(SRCNNResBlockDeep, self).__init__()
+
+        self.conv1 = nn.Conv2d(num_channels, 32, kernel_size=9, padding=9 // 2)
+        self.resblock1 = ResidualBlock(32, 32)
+        self.resblock2 = ResidualBlock(32, 32)
+        self.resblock3 = ResidualBlock(32, 32)
+        self.resblock4 = ResidualBlock(32, 32)
+        self.last_conv = nn.Conv2d(32, num_channels, kernel_size=5, padding=5 // 2)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        out = self.resblock1(x)
+        out = self.resblock2(out)
+        out = self.resblock3(out)
+        out = self.resblock4(out)
+        out = out + x
+        out = self.last_conv(out)
+        return out

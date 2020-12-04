@@ -9,7 +9,7 @@ import torch.backends.cudnn as cudnn
 from torch.utils.data.dataloader import DataLoader
 from tqdm import tqdm
 
-from models import SRCNN, SRCNNResBlock
+from models import SRCNN, SRCNNResBlock, SRCNNResBlockDeep
 from datasets import TrainDataset, EvalDataset
 from utils import AverageMeter, calc_psnr
 
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('--num-epochs', type=int, default=400)
     parser.add_argument('--num-workers', type=int, default=8)
     parser.add_argument('--seed', type=int, default=123)
-    parser.add_argument('--variant', choices={'default', 'resblock'}, default='default')
+    parser.add_argument('--variant', choices={'default', 'resblock', 'deepresblock'}, default='default')
     args = parser.parse_args()
 
     args.outputs_dir = os.path.join(args.outputs_dir, 'x{}'.format(args.scale))
@@ -43,8 +43,10 @@ if __name__ == '__main__':
     model = None
     if (args.variant == 'default'):
         model = SRCNN().to(device)
-    else:
+    elif (args.variant == 'resblock'):
         model = SRCNNResBlock().to(device)
+    else:
+        model = SRCNNResBlockDeep().to(device)
     print('Num Parameters', count_parameters(model))
     print(model)
     criterion = nn.MSELoss()
@@ -55,11 +57,20 @@ if __name__ == '__main__':
             {'params': model.conv2.parameters()},
             {'params': model.conv3.parameters(), 'lr': args.lr * 0.1}
         ], lr=args.lr)
+    elif (args.variant == 'resblock'):
+        optimizer = optim.Adam([
+            {'params': model.conv1.parameters()},
+            {'params': model.resblock1.parameters()},
+            {'params': model.resblock2.parameters()},
+            {'params': model.last_conv.parameters(), 'lr': args.lr * 0.1}
+        ], lr=args.lr)
     else:
         optimizer = optim.Adam([
             {'params': model.conv1.parameters()},
             {'params': model.resblock1.parameters()},
             {'params': model.resblock2.parameters()},
+            {'params': model.resblock3.parameters()},
+            {'params': model.resblock4.parameters()},
             {'params': model.last_conv.parameters(), 'lr': args.lr * 0.1}
         ], lr=args.lr)
 
